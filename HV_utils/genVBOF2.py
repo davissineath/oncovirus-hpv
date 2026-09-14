@@ -1,50 +1,23 @@
 from cobra import Reaction, Metabolite
+from copy import deepcopy
 from collections import Counter
-from info import ntpsDict, aaDict, N_A, k_atp_protein, k_atp_rna, k_ppi
+from HV_utils.info import ntpsDict, metDict, aaDict, N_A, k_atp_protein, k_atp_rna, k_ppi, proteins_per_mrna
 
 #######################################################################################
 # Function Setup
 
-nbof_spikes = 90
 # NOTE: the keys in this dictionary correspond to the name of the product in the genbank file
 virus_composition = {
-    "GU28": { # COVID19
-# Sources for all numbers below are: 
-# Source: Neuman, B.W., Adair, B. D., et.al. J. of Virology (2006, 80:16) -> 8M2:4N:1S3 stoichiometry per spike and 75 spike particles
-# Source: Neuman, B.W., Joseph, J. S., et.al. J. of Virology (2008, 82:11).
-# Source: Neuman, B.W., Kiss G., et.al. J. of Structural Biology (2011, 174) -> # 8M2:4N:1S3 stoichiometry per spike and 90 spike particles
-# Source: Escors D., Camafeita E, et.al. J. of Virology (2001, 75:24) -> M:N from whole virion is 3:1
-# Source: Barcena, M., Oostergetel, G. T., et.al. PNAS (2008, 106:2) 
-        # Copy number for viral genome                      [Cg]                
-        "Cg": 1,
-        "proteins": {
-        # Copy numbers for structural proteins N, M, S, and E
-        # Copy number for viral M protein
-        "membrane glycoprotein": 16*nbof_spikes+100,
-        # Copy number for viral Spike protein - based on 8M2:4N:1S3 stoichiometry per spike and 75 spike particles       
-        "surface glycoprotein": 3*nbof_spikes,
-        # Copy number for viral N protein - based on 8M2:4N:1S3 stoichiometry per spike and 75 spike particles               
-        "nucleocapsid phosphoprotein": 4*nbof_spikes+130,
-        # Copy number for viral Envelope protein - no good estimate, but said to be low         
-        "envelope protein": 5,
-        # Copy numbers for nonstructural proteins pp1a and pp1ab
-        # Copy number for viral nonstructural polyprotein pp1a [Cnp_1a] - no good estimate, but said to be low       
-        "orf1a polyprotein": 5,
-        # Copy number for viral nonstructural polyprotein pp1ab [Cnp_1ab] - no good estimate, but said to be low  
-        "orf1ab polyprotein": 5,
-        # Copy numbers for accessory proteins 
-        # Copy number for viral accessory polyprotein ORF3a  [Cnp] - no good estimate, but said to be low 
-        "ORF3a protein": 5,
-        # Copy number for viral accessory polyprotein ORF6  [Cnp] - no good estimate, but said to be low    
-        "ORF6 protein": 5,
-        # Copy number for viral accessory polyprotein ORF7a  [Cnp] - no good estimate, but said to be low    
-        "ORF7a protein": 5,
-        # Copy number for viral accessory polyprotein ORF7b  [Cnp] - no good estimate, but said to be low    
-        "ORF7b": 5,
-         # Copy number for viral accessory polyprotein ORF8  [Cnp] - no good estimate, but said to be low    
-        "ORF8 protein": 5,
-         # Copy number for viral accessory polyprotein ORF10  [Cnp] - no good estimate, but said to be low    
-        "ORF10 protein": 5}}
+    "HpV18": {              # HPV-18 (locus)                
+                "Cg": 1,            # Copy number for viral genome
+                "proteins": {
+                            # Copy numbers for structural proteins L1 and L2 for HPV
+                            # https://ictv.global/report/chapter/papillomaviridae/papillomaviridae
+                            # HPV is a non-enveloped virus, so the capsid is made of L1 and L2 proteins. 
+                            # The capsid is composed of 360 copies of L1 and 12 copies of L2.
+                            "L1": 360, 
+                            "L2": 12,}
+            }
 }
 
 def multiply_counter(counter, n):
@@ -62,7 +35,7 @@ def get_virus_names(virus_record):
     genVBOF."""
     long_name = virus_record.description.rstrip(", complete genome")
     # try to get a short name for the virus by taking the prefix of the first CDS
-    short_name = next(feature for feature in virus_record.features if feature.type == "CDS").qualifiers["locus_tag"][0].rstrip("_gp01")
+    short_name = next(feature for feature in virus_record.features if feature.type == "CDS").qualifiers["locus_tag"][0].rstrip("gp1")
     return (short_name, long_name)
 
 model_name_to_met_dict_file = {
@@ -73,24 +46,39 @@ model_name_to_met_dict_file = {
     "GSM_human model": "met_dicts/GSM_human_met_dict.txt", "lung model": "met_dicts/lung_met_dict.txt"
 }
 
-def load_metabolite_id_dict(model, model_name=None):
-    """Provide a dictionary mapping generic metabolic name (a string like "A",
-    "atp", "h2o", "h" or "PPi") to the metabolite object in the model.
+# def load_metabolite_id_dict(model, model_name=None):
+#     """Provide a dictionary mapping generic metabolic name (a string like "A",
+#     "atp", "h2o", "h" or "PPi") to the metabolite object in the model.
     
-    The model_name parameter allows to indicate the name of the model in case
-    the model object has no name attribute. Do not set this parameter if the
-    model object already has a name."""
+#     The model_name parameter allows to indicate the name of the model in case
+#     the model object has no name attribute. Do not set this parameter if the
+#     model object already has a name."""
 
-    name = model_name or model.name
-    if name in model_name_to_met_dict_file:
-        met_dict_file = model_name_to_met_dict_file[name]
-    else:
-        raise NotImplementedError("This model is not covered: \"{}\"".format(name))
+#     name = model_name or model.name
+#     if name in model_name_to_met_dict_file:
+#         met_dict_file = model_name_to_met_dict_file[name]
+#     else:
+#         raise NotImplementedError("This model is not covered: \"{}\"".format(name))
 
-    with open(met_dict_file, "r") as fh:
-        met_tuples = (line.split(", ")[:2] for line in fh.readlines()[2:])
-    met_dict = {key: model.metabolites.get_by_id(met_id) for key, met_id in met_tuples}
-    return met_dict
+#     with open(met_dict_file, "r") as fh:
+#         met_tuples = (line.split(", ")[:2] for line in fh.readlines()[2:])
+#     met_dict = {key: model.metabolites.get_by_id(met_id) for key, met_id in met_tuples}
+#     return met_dict
+
+def reverse_complement(seq):
+    rc = ""
+    for nuc in seq[::-1]:
+        if nuc == "A":
+            rc += "T"
+        elif nuc == "T":
+            rc += "A"
+        elif nuc == "C":
+            rc += "G"
+        elif nuc == "G":
+            rc += "C"
+        else:
+            raise ValueError("Invalid nucleotide: %s" % nuc)
+    return rc
 
 #######################################################################################
 # Function Definition
@@ -117,33 +105,44 @@ def genVBOF2(virus_record, model, model_name=None):
     Returns:
     - virus biomass objective function (cobra.core.reaction.Reaction)
     """
-    met_dict = load_metabolite_id_dict(model, model_name=model_name)
 
     # VIRUS IDENTIFICATION
     taxonomy = " ".join([taxon.lower() for taxon in virus_record.annotations["taxonomy"]])
-    if "betacoronavirus" not in taxonomy:
+    if "papillomaviridae" not in taxonomy:
         raise NotImplementedError('Virus family is not supported: Unable to create VBOF. Consult _README')
     short_name, full_name = get_virus_names(virus_record)
 
     # AMINOACID COUNT
-    all_cds = {feature for feature in virus_record.features if feature.type == "CDS"}
+    all_cds = [feature for feature in virus_record.features if feature.type == "CDS"]
     # Check that our own virus_composition dict contain exactly the
     # proteins defined in the genbank file, no more, no less.
-    protein_names_in_gb_file = {cds.qualifiers["product"][0] for cds in all_cds}
+    protein_names_in_gb_file = {cds.qualifiers["gene"][0] for cds in all_cds}
     protein_names_in_our_data = {protein_name for protein_name in virus_composition[short_name]["proteins"]}
-    assert protein_names_in_gb_file == protein_names_in_our_data
+    assert protein_names_in_our_data.issubset(protein_names_in_gb_file)
 
     virus_aa_composition = Counter()
+    virus_mrna_composition = Counter()
     # protein name -> number of atp involved in its peptide bonds formations
     # (accounting for the number of copies of protein)
     peptide_bond_formation = dict()
     for cds in all_cds:
-        protein_name = cds.qualifiers["product"][0]
-        aa_sequence = cds.qualifiers["translation"][0]
-        aa_count = Counter(aa_sequence)
-        copies_per_virus = virus_composition[short_name]["proteins"][protein_name]
-        virus_aa_composition += multiply_counter(aa_count, copies_per_virus)
-        peptide_bond_formation[protein_name] = (len(aa_sequence) * k_atp_protein - k_atp_protein) * copies_per_virus
+        if cds.qualifiers["gene"][0] in protein_names_in_our_data:
+            protein_name = cds.qualifiers["gene"][0]
+            aa_sequence = cds.qualifiers["translation"][0]
+            dna_sequence = virus_record.seq[cds.location.start : cds.location.end]
+            if cds.location.strand == -1:
+                dna_sequence = reverse_complement(dna_sequence)
+            aa_count = Counter(aa_sequence)
+            nc_count = Counter(dna_sequence)
+
+            copies_per_virus = virus_composition[short_name]["proteins"][protein_name]
+
+            virus_aa_composition += multiply_counter(aa_count, copies_per_virus)
+            virus_mrna_composition += multiply_counter(nc_count, copies_per_virus)
+
+            peptide_bond_formation[protein_name] = (
+                len(aa_sequence) * k_atp_protein - k_atp_protein
+                ) * copies_per_virus
 
     # [3] Precursor frequency
     # Genome                            [Nucleotides]
@@ -152,54 +151,83 @@ def genVBOF2(virus_record, model, model_name=None):
     countA  = virus_nucl_count["A"]
     countC  = virus_nucl_count["C"]
     countG  = virus_nucl_count["G"]
-    countU  = virus_nucl_count["T"]    # Base 'T' is pseudo for base 'U'
-    antiA   = countU
+    countT  = virus_nucl_count["T"]    # Base 'T' is pseudo for base 'U'
+    antiA   = countT
     antiC   = countG
     antiG   = countC
-    antiU   = countA
+    antiT   = countA
+
+    # Note: mRNA is 1-stranded, so we don't track the "anti" parts
+    # Also: we didn't bother to replace T->U in the string; we do it here
+    countA_rna = virus_mrna_composition["A"] / proteins_per_mrna
+    countC_rna = virus_mrna_composition["C"] / proteins_per_mrna
+    countG_rna = virus_mrna_composition["G"] / proteins_per_mrna
+    countU_rna = virus_mrna_composition["T"] / proteins_per_mrna
+
     # Count summation
-    totNTPS     = (Cg * (countA + countC + countG + countU + antiA + antiC + antiG + antiU))
+    totNTPS     = (Cg * (countA + countC + countG + countT + antiA + antiC + antiG + antiT))
     totAA       = sum(count for count in virus_aa_composition.values())
 
     # [4] VBOF Calculations
     # Nucleotides
-    # mol.ntps/mol.virus
+    # mol.dntps/mol.virus
     V_a = (Cg*(countA + antiA))
     V_c = (Cg*(countC + antiC))
     V_g = (Cg*(countG + antiG))
-    V_u = (Cg*(countU + antiU))
-    # g.ntps/mol.virus
-    G_a = V_a * ntpsDict["atp"]
-    G_c = V_c * ntpsDict["ctp"]
-    G_g = V_g * ntpsDict["gtp"]
-    G_u = V_u * ntpsDict["ttp"]
+    V_t = (Cg*(countT + antiT))
+    # g.dmps/mol.virus
+    G_a = V_a * ntpsDict["damp"]
+    G_c = V_c * ntpsDict["dcmp"]
+    G_g = V_g * ntpsDict["dgmp"]
+    G_t = V_t * ntpsDict["dtmp"]
+
+    # mol.ntps (mrna) / mol.virus
+    V_a_rna = countA_rna
+    V_c_rna = countC_rna
+    V_g_rna = countG_rna
+    V_u_rna = countU_rna
 
     # Amino Acids
     # g.a/mol.virus
     G_aa = {aa: count * aaDict[aa] for aa, count in virus_aa_composition.items()}
     # Total genomic and proteomic molar mass
-    M_v     = (G_a + G_c + G_g + G_u) + sum(G_aa.values())
+    M_v = (G_a + G_c + G_g + G_t) + sum(G_aa.values())
 
     # Stoichiometric coefficients
     # Nucleotides [mmol.ntps/g.virus] (for the genome)
-    S_atp = 1000 * (V_a/M_v)
-    S_ctp = 1000 * (V_c/M_v)
-    S_gtp = 1000 * (V_g/M_v)
-    S_utp = 1000 * (V_u/M_v)
+    S_datp = 1000 * (V_a / M_v)
+    S_dctp = 1000 * (V_c / M_v)
+    S_dgtp = 1000 * (V_g / M_v)
+    S_dttp = 1000 * (V_t / M_v)
+
+    # mRNA is handeled differently because the virus doesn't pack it. We will
+    # allow it to decay into NMPs at a rate governed by the protein to mrna
+    # ratio (for mass conservation)
+    S_atp_rna = 1000 * (V_a_rna / M_v)
+    S_ctp_rna = 1000 * (V_c_rna / M_v)
+    S_gtp_rna = 1000 * (V_g_rna / M_v)
+    S_utp_rna = 1000 * (V_u_rna / M_v)
+    S_amp_rna = 1000 * (V_a_rna / M_v)
+    S_cmp_rna = 1000 * (V_c_rna / M_v)
+    S_gmp_rna = 1000 * (V_g_rna / M_v)
+    S_ump_rna = 1000 * (V_u_rna / M_v)
 
     # Amino acids [mmol.aa/g.virus]
     S_aa = {aa: 1000 * V_aa / M_v for aa, V_aa in virus_aa_composition.items()}
 
     # Energy requirements
-    # Genome: Phosphodiester bond formation products [Pyrophosphate]
-    # SARS Cov 2 is a single stranded RNA virus: it has to first do an
-    # intermediary reverse copy of itself and then replicate itself from
-    # that intermediary strand.
-    genTemp = (((countA + countC + countG + countU) * k_ppi) - k_ppi)
-    genRep  = (((antiA + antiC + antiG + antiU) * k_ppi) - k_ppi)
-    genTot  = genTemp + genRep
-    V_ppi   = genTot
-    S_ppi   = 1000 * (V_ppi / M_v)
+    n_proteins = len(virus_composition[short_name]["proteins"])
+    S_ppi = (
+        S_atp_rna
+        + S_ctp_rna
+        + S_gtp_rna
+        + S_utp_rna
+        + S_datp
+        + S_dctp
+        + S_dgtp
+        + S_dttp
+        - (2 + n_proteins / proteins_per_mrna) * 1000 / M_v
+    ) * k_ppi
 
     # Proteome: Peptide bond formation [ATP + H2O]
     # Note: ATP used in this process is denoated as ATPe/Ae [e = energy version]
@@ -208,11 +236,18 @@ def genVBOF2(virus_record, model, model_name=None):
  
     # [5] VBOF Reaction formatting and output
     # Left-hand terms: Nucleotides
-    # Note: ATP term is a summation of genome and energy requirements
-    S_ATP   = (S_atp + S_Ae) * -1
-    S_CTP   = S_ctp * -1
-    S_GTP   = S_gtp * -1
-    S_UTP   = S_utp * -1
+    S_ATP = S_Ae * -1 - S_atp_rna
+    S_CTP = S_ctp_rna * -1
+    S_GTP = S_gtp_rna * -1
+    S_UTP = S_utp_rna * -1
+    S_AMP = S_amp_rna
+    S_CMP = S_cmp_rna
+    S_GMP = S_gmp_rna
+    S_UMP = S_ump_rna
+    S_DATP = S_datp * -1
+    S_DCTP = S_dctp * -1
+    S_DGTP = S_dgtp * -1
+    S_DTTP = S_dttp * -1
  
     # Left-hand terms: Amino Acids
     S_AAf = {aa: -coef for aa, coef in S_aa.items()}
@@ -230,35 +265,65 @@ def genVBOF2(virus_record, model, model_name=None):
     virus_reaction.subsystem                = 'Virus Production'
     virus_reaction.lower_bound              = 0
     virus_reaction.upper_bound              = 1000
-
+    model.add_reactions([virus_reaction])
     virus_reaction.add_metabolites(({
-        met_dict['atp']: S_ATP,
-        met_dict['ctp']: S_CTP,
-        met_dict['gtp']: S_GTP,
-        met_dict['utp']: S_UTP,
-        met_dict['A']: S_AAf['A'],
-        met_dict['R']: S_AAf['R'],
-        met_dict['N']: S_AAf['N'],
-        met_dict['D']: S_AAf['D'],
-        met_dict['C']: S_AAf['C'],
-        met_dict['Q']: S_AAf['Q'],
-        met_dict['E']: S_AAf['E'],
-        met_dict['G']: S_AAf['G'],
-        met_dict['H']: S_AAf['H'],
-        met_dict['I']: S_AAf['I'],
-        met_dict['L']: S_AAf['L'],
-        met_dict['K']: S_AAf['K'],
-        met_dict['M']: S_AAf['M'],
-        met_dict['F']: S_AAf['F'],
-        met_dict['P']: S_AAf['P'],
-        met_dict['S']: S_AAf['S'],
-        met_dict['T']: S_AAf['T'],
-        met_dict['W']: S_AAf['W'],
-        met_dict['Y']: S_AAf['Y'],
-        met_dict['V']: S_AAf['V'],
-        met_dict['h2o']: S_H2O,
-        met_dict['adp']: S_ADP,
-        met_dict['Pi']:  S_Pi,
-        met_dict['h']:   S_H,
-        met_dict['PPi']: S_PPi}))
+        metDict['atp']: S_ATP,
+        metDict['ctp']: S_CTP,
+        metDict['gtp']: S_GTP,
+        metDict['utp']: S_UTP,
+        metDict["amp"]: S_AMP,
+        metDict["cmp"]: S_CMP,
+        metDict["gmp"]: S_GMP,
+        metDict["ump"]: S_UMP,
+        metDict["datp"]: S_DATP,
+        metDict["dctp"]: S_DCTP,
+        metDict["dgtp"]: S_DGTP,
+        metDict["dttp"]: S_DTTP,
+        metDict['A']: S_AAf['A'],
+        metDict['R']: S_AAf['R'],
+        metDict['N']: S_AAf['N'],
+        metDict['D']: S_AAf['D'],
+        metDict['C']: S_AAf['C'],
+        metDict['Q']: S_AAf['Q'],
+        metDict['E']: S_AAf['E'],
+        metDict['G']: S_AAf['G'],
+        metDict['H']: S_AAf['H'],
+        metDict['I']: S_AAf['I'],
+        metDict['L']: S_AAf['L'],
+        metDict['K']: S_AAf['K'],
+        metDict['M']: S_AAf['M'],
+        metDict['F']: S_AAf['F'],
+        metDict['P']: S_AAf['P'],
+        metDict['S']: S_AAf['S'],
+        metDict['T']: S_AAf['T'],
+        metDict['W']: S_AAf['W'],
+        metDict['Y']: S_AAf['Y'],
+        metDict['V']: S_AAf['V'],
+        metDict['h2o']: S_H2O,
+        metDict['adp']: S_ADP,
+        metDict['Pi']:  S_Pi,
+        metDict['h']:   S_H,
+        metDict['PPi']: S_PPi}))
     return virus_reaction
+
+# Function Definition
+# genHVM.py takes a user-supplied model file and creates an intergrated host-
+# virus model, given a VBOF
+
+# Inputs:
+# Model             User-supplied model (cobra.io.core.model.Model instance)
+# VBOF              Virus biomass objective function created by genVBOF.py
+
+# Outputs:
+# hvm               Integrated host-virus model
+
+def genHVM(Model,VBOF):
+    "Generate_HVM"
+
+    # Integrate the VBOF Reaction
+    HVM = deepcopy(Model)
+    HVM.add_reaction(VBOF)
+
+    # Outputs
+    return HVM
+

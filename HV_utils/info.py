@@ -3,43 +3,59 @@
 
 # Metabolite (verbose to model) definitions
 metDict = {
-    'atp': 'atp[c]',        # ATP,              ChEBI 15422
-    'ctp': 'ctp[c]',        # CTP,              ChEBI 17677
-    'gtp': 'gtp[c]',        # GTP,              ChEBI 15996
-    'utp': 'utp[c]',        # UTP,              ChEBI 15713
-    'A': 'ala-L[c]',        # Alaline,          ChEBI 16977
-    'R': 'arg-L[c]',        # Arginine,         ChEBI 16467
-    'N': 'asn-L[c]',        # Asparagine,       ChEBI 17196
-    'D': 'asp-L[c]',        # Aspartate,        ChEBI 17053
-    'C': 'cys-L[c]',        # Cysteine,         ChEBI 17561
-    'Q': 'gln-L[c]',        # Glutamine,        ChEBI 18050
-    'E': 'glu-L[c]',        # Glutamate,        ChEBI 16015
-    'G': 'gly[c]',          # Glycine,          ChEBI 15428
-    'H': 'his-L[c]',        # Histidine,        ChEBI 15971
-    'I': 'ile-L[c]',        # Isoleucine,       ChEBI 17191
-    'L': 'leu-L[c]',        # Leucine,          ChEBI 15603
-    'K': 'lys-L[c]',        # Lysine,           ChEBI 18019
-    'M': 'met-L[c]',        # Methionine,       ChEBI 16643
-    'F': 'phe-L[c]',        # Phenylalanine,    ChEBI 17295
-    'P': 'pro-L[c]',        # Proline,          ChEBI 17203
-    'S': 'ser-L[c]',        # Serine,           ChEBI 17115
-    'T': 'thr-L[c]',        # Threonine,        ChEBI 16857
-    'W': 'trp-L[c]',        # Tryptophan,       ChEBI 16828
-    'Y': 'tyr-L[c]',        # Tyrosine,         ChEBI 17895
-    'V': 'val-L[c]',        # Valine,           ChEBI 16414
-    'h2o': 'h2o[c]',        # H2O
-    'adp': 'adp[c]',        # ADP
-    'Pi': 'pi[c]',          # Phosphate
-    'h': 'h[c]',            # Hydrogen [Proton]
-    'PPi': 'ppi[c]',        # Pyrophosphate
+    'atp': 'atp_c',        # ATP,              ChEBI 15422
+    'ctp': 'ctp_c',        # CTP,              ChEBI 17677
+    'gtp': 'gtp_c',        # GTP,              ChEBI 15996
+    'utp': 'utp_c',        # UTP,              ChEBI 15713
+    'amp': 'amp_c',        
+    'cmp': 'cmp_c',        
+    'gmp': 'gmp_c',       
+    'ump': 'ump_c',        
+    'datp': 'datp_c',      
+    'dctp': 'dctp_c',      
+    'dgtp': 'dgtp_c',      
+    'dttp': 'dttp_c',      
+    'A': 'ala_L_c',        # Alaline,          ChEBI 16977
+    'R': 'arg_L_c',        # Arginine,         ChEBI 16467
+    'N': 'asn_L_c',        # Asparagine,       ChEBI 17196
+    'D': 'asp_L_c',        # Aspartate,        ChEBI 17053
+    'C': 'cys_L_c',        # Cysteine,         ChEBI 17561
+    'Q': 'gln_L_c',        # Glutamine,        ChEBI 18050
+    'E': 'glu_L_c',        # Glutamate,        ChEBI 16015
+    'G': 'gly_c',          # Glycine,          ChEBI 15428
+    'H': 'his_L_c',        # Histidine,        ChEBI 15971
+    'I': 'ile_L_c',        # Isoleucine,       ChEBI 17191
+    'L': 'leu_L_c',        # Leucine,          ChEBI 15603
+    'K': 'lys_L_c',        # Lysine,           ChEBI 18019
+    'M': 'met_L_c',        # Methionine,       ChEBI 16643
+    'F': 'phe_L_c',        # Phenylalanine,    ChEBI 17295
+    'P': 'pro_L_c',        # Proline,          ChEBI 17203
+    'S': 'ser_L_c',        # Serine,           ChEBI 17115
+    'T': 'thr_L_c',        # Threonine,        ChEBI 16857
+    'W': 'trp_L_c',        # Tryptophan,       ChEBI 16828
+    'Y': 'tyr_L_c',        # Tyrosine,         ChEBI 17895
+    'V': 'val_L_c',        # Valine,           ChEBI 16414
+    'h2o': 'h2o_c',        # H2O
+    'adp': 'adp_c',        # ADP
+    'Pi': 'pi_c',          # Phosphate
+    'h': 'h_c',            # Hydrogen [Proton]
+    'PPi': 'ppi_c',        # Pyrophosphate
 }
 
 # Nucleotides Dictionary
 ntpsDict = {
-    'atp': 507.181,     # ATP,              ChEBI 15422
-    'gtp': 483.15644,   # GTP,              ChEBI 17677
-    'ctp': 523.18062,   # CTP,              ChEBI 15996
-    'ttp': 484.14116,   # UTP,              ChEBI 15713 (TTP is psuedo for UTP in viral genome)
+    "atp": 507.181,
+    "gtp": 483.15644,
+    "ctp": 523.18062,
+    "utp": 484.14116,
+    "datp": 491.1816,
+    "dgtp": 467.1569,
+    "dctp": 482.1683,
+    "dttp": 507.181,
+    "damp": 331.068,
+    "dgmp": 347.063,
+    "dcmp": 307.057,
+    "dtmp": 322.057,
 }
 # Amino Acids Dictionary
 aaDict = {
@@ -71,10 +87,14 @@ miscDict = {
 # Avogadro's Number
 N_A         = 6.0221409e+23
 # ATP requirement coefficients
-# source: Queka, Dietmaira, Hanschob, Martíneza, Borthb, Nielsen
-# Journal of Biotechnology 184 (2014) 172–178
+# source: Queka, Dietmaira, Hanschob, Martï¿½neza, Borthb, Nielsen
+# Journal of Biotechnology 184 (2014) 172ï¿½178
 k_atp_protein = 4.3
 k_atp_dna = 1.4
 k_atp_rna = 0.4
 
 k_ppi = 1
+
+proteins_per_mrna = 5616 # median taken from https://doi.org/10.1371/journal.pone.0073943
+
+
