@@ -15,26 +15,26 @@ metDict = {
     'dctp': 'dctp_c',      
     'dgtp': 'dgtp_c',      
     'dttp': 'dttp_c',      
-    'A': 'ala_L_c',        # Alaline,          ChEBI 16977
-    'R': 'arg_L_c',        # Arginine,         ChEBI 16467
-    'N': 'asn_L_c',        # Asparagine,       ChEBI 17196
-    'D': 'asp_L_c',        # Aspartate,        ChEBI 17053
-    'C': 'cys_L_c',        # Cysteine,         ChEBI 17561
-    'Q': 'gln_L_c',        # Glutamine,        ChEBI 18050
-    'E': 'glu_L_c',        # Glutamate,        ChEBI 16015
+    'A': 'ala__L_c',        # Alaline,          ChEBI 16977
+    'R': 'arg__L_c',        # Arginine,         ChEBI 16467
+    'N': 'asn__L_c',        # Asparagine,       ChEBI 17196
+    'D': 'asp__L_c',        # Aspartate,        ChEBI 17053
+    'C': 'cys__L_c',        # Cysteine,         ChEBI 17561
+    'Q': 'gln__L_c',        # Glutamine,        ChEBI 18050
+    'E': 'glu__L_c',        # Glutamate,        ChEBI 16015
     'G': 'gly_c',          # Glycine,          ChEBI 15428
-    'H': 'his_L_c',        # Histidine,        ChEBI 15971
-    'I': 'ile_L_c',        # Isoleucine,       ChEBI 17191
-    'L': 'leu_L_c',        # Leucine,          ChEBI 15603
-    'K': 'lys_L_c',        # Lysine,           ChEBI 18019
-    'M': 'met_L_c',        # Methionine,       ChEBI 16643
-    'F': 'phe_L_c',        # Phenylalanine,    ChEBI 17295
-    'P': 'pro_L_c',        # Proline,          ChEBI 17203
-    'S': 'ser_L_c',        # Serine,           ChEBI 17115
-    'T': 'thr_L_c',        # Threonine,        ChEBI 16857
-    'W': 'trp_L_c',        # Tryptophan,       ChEBI 16828
-    'Y': 'tyr_L_c',        # Tyrosine,         ChEBI 17895
-    'V': 'val_L_c',        # Valine,           ChEBI 16414
+    'H': 'his__L_c',        # Histidine,        ChEBI 15971
+    'I': 'ile__L_c',        # Isoleucine,       ChEBI 17191
+    'L': 'leu__L_c',        # Leucine,          ChEBI 15603
+    'K': 'lys__L_c',        # Lysine,           ChEBI 18019
+    'M': 'met__L_c',        # Methionine,       ChEBI 16643
+    'F': 'phe__L_c',        # Phenylalanine,    ChEBI 17295
+    'P': 'pro__L_c',        # Proline,          ChEBI 17203
+    'S': 'ser__L_c',        # Serine,           ChEBI 17115
+    'T': 'thr__L_c',        # Threonine,        ChEBI 16857
+    'W': 'trp__L_c',        # Tryptophan,       ChEBI 16828
+    'Y': 'tyr__L_c',        # Tyrosine,         ChEBI 17895
+    'V': 'val__L_c',        # Valine,           ChEBI 16414
     'h2o': 'h2o_c',        # H2O
     'adp': 'adp_c',        # ADP
     'Pi': 'pi_c',          # Phosphate
